@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fiches de paie SASP — grille agents</title>
+<style>
+:root{--bg:#eef1f6;--card:#fff;--text:#1b2433;--muted:#5d6b82;--line:#d5dbe6;--head:#1f3864;--headtxt:#fff;--accent:#2f5fb3;--field:#fff8dc;--sum:#dfe7f5;--ok:#1e8e4e;--warn:#c0392b;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10151f;--card:#1a2232;--text:#e6ebf4;--muted:#93a1b8;--line:#2f3b52;--head:#223a6b;--accent:#6c9bf0;--field:#2a2f1f;--sum:#223153;--ok:#4cc38a;--warn:#ff7b6b;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#10151f;--card:#1a2232;--text:#e6ebf4;--muted:#93a1b8;--line:#2f3b52;--head:#223a6b;--accent:#6c9bf0;--field:#2a2f1f;--sum:#223153;--ok:#4cc38a;--warn:#ff7b6b;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.4 Arial,Helvetica,sans-serif;padding:16px}
+.wrap{max-width:1000px;margin:0 auto}
+header{background:var(--head);color:var(--headtxt);border-radius:10px 10px 0 0;padding:16px;text-align:center}
+header h1{margin:0;font-size:19px;letter-spacing:.5px}
+header p{margin:4px 0 0;font-size:12px;opacity:.8}
+.card{background:var(--card);border:1px solid var(--line);border-top:0;padding:14px 16px}
+.card:last-of-type{border-radius:0 0 10px 10px}
+h2{margin:0 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.8px;color:var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;max-width:420px}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:3px}
+input,select,textarea{width:100%;padding:7px;border:1px solid var(--line);border-radius:6px;background:var(--field);color:var(--text);font:inherit}
+input:focus,select:focus{outline:2px solid var(--accent)}
+input:disabled,select:disabled{opacity:.6;cursor:not-allowed}
+button:disabled{opacity:.45;cursor:not-allowed}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+#grille{min-width:1120px}
+#grille input.d{width:54px;padding:6px 3px;text-align:center}
+#grille .t{width:78px}
+th{font-size:12px;color:var(--muted);text-align:left;padding:4px 4px 6px;font-weight:normal;border-bottom:1px solid var(--line)}
+th.dy{text-align:center}
+td{padding:3px 4px;border-bottom:1px solid var(--line)}
+td.n{width:28px;color:var(--muted);font-size:12px;text-align:center}
+td.amt,th.amt{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:bold}
+td.x{width:34px;text-align:center}
+.del{background:transparent;color:var(--muted);border:0;padding:2px 8px;font-size:18px;cursor:pointer}
+tfoot td{border:0;padding-top:10px}
+.total{background:var(--sum);font-size:16px;font-weight:bold}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+button{padding:9px 14px;border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:6px;font:inherit;cursor:pointer}
+button.sec{background:transparent;color:var(--accent)}
+details summary{cursor:pointer;font-size:13px;text-transform:uppercase;letter-spacing:.8px;color:var(--accent);font-weight:bold}
+details .inner{margin-top:12px;max-width:460px}
+.badge{display:inline-block;margin-left:8px;padding:2px 8px;border-radius:10px;font-size:11px;text-transform:none;letter-spacing:0;border:1px solid var(--line)}
+.badge.on{color:var(--warn);border-color:var(--warn)}
+.badge.off{color:var(--ok);border-color:var(--ok)}
+.chk{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--text);margin:6px 0}
+.chk input{width:auto}
+#toast{height:18px;font-size:12px;color:var(--accent);margin-top:6px}
+.note{font-size:12px;color:var(--muted);margin:8px 0 0}
+textarea{font:12px/1.3 monospace;height:70px;resize:vertical}
+@media print{body{background:#fff;color:#000;padding:0}.btns,#toast,.del,.note,#params,#lockCard{display:none}input,select{border:0;background:none;appearance:none;padding:2px}.scroll{overflow:visible}#grille{min-width:0}}
+@media (max-width:560px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><h1>SAN ANDREAS STATE POLICE — FICHES DE PAIE</h1><p>Saisis les heures du lundi au dimanche : le salaire se calcule tout seul</p></header>
+
+<section class="card" id="lockCard">
+<details>
+<summary>Verrouillage (administrateur)<span class="badge" id="lockStatus"></span></summary>
+<div class="inner" id="lockBox"></div>
+</details>
+</section>
+
+<section class="card" id="params">
+<details>
+<summary>Paramètres : grades et taux horaires</summary>
+<div class="inner">
+<table><thead><tr><th>Grade</th><th>Taux ($/h)</th><th></th></tr></thead><tbody id="gradesBody"></tbody></table>
+<div class="btns">
+<button id="addGrade">+ Ajouter un grade</button>
+<button id="resetGrades" class="sec">Grades par défaut</button>
+</div>
+<p class="note">Renommer un grade met à jour toutes les lignes. Changer son taux met à jour les agents qui ont ce grade. Supprimer un grade vide le grade des agents concernés. Les taux par défaut sont des valeurs d’exemple.</p>
+</div>
+</details>
+</section>
+
+<section class="card">
+<h2>Période</h2>
+<div class="grid">
+<div><label for="du">Semaine du (lundi)</label><input id="du" type="date" value="2026-11-02"></div>
+<div><label for="au">au (dimanche)</label><input id="au" type="date" value="2026-11-08"></div>
+</div>
+</section>
+
+<section class="card">
+<h2>Agents</h2>
+<div class="scroll">
+<table id="grille">
+<thead><tr><th></th><th>Nom Prénom (RP)</th><th>Matricule</th><th>Grade</th><th>Taux ($/h)</th>
+<th class="dy">Lun</th><th class="dy">Mar</th><th class="dy">Mer</th><th class="dy">Jeu</th><th class="dy">Ven</th><th class="dy">Sam</th><th class="dy">Dim</th>
+<th class="amt">Total h</th><th class="amt">Salaire</th><th></th></tr></thead>
+<tbody id="rows"></tbody>
+<tfoot><tr><td colspan="12" style="text-align:right">Total</td><td class="amt" id="totalH">0 h</td><td class="amt total" id="total">0 $</td><td></td></tr></tfoot>
+</table>
+</div>
+<div class="btns">
+<button id="add">+ Ajouter 5 lignes</button>
+<button id="copy" class="sec">Copier pour Discord</button>
+<button id="print" class="sec">Imprimer / PDF</button>
+<button id="reset" class="sec">Vider les agents</button>
+</div>
+<div id="toast"></div>
+<p class="note">Tout est enregistré automatiquement dans ce navigateur (sur cet appareil). Pour partager le résultat, utilise « Copier pour Discord » ou l’impression.</p>
+</section>
+</div>
+
+<script>
+var KEY="sasp_paie_v1",LKEY="sasp_lock_v1";
+/* Config partagée (optionnelle) : colle ici la configuration copiée depuis le panneau Verrouillage. Exemple : {"hash":"...","locks":{"p":1,"r":1,"l":1,"d":0},"bareme":[...]} */
+var PRESET=null;
+var DEF_GR=[["Cadet",150],["Officer I",200],["Officer II",250],["Officer III",300],["Sergeant I",350],["Sergeant II",400],["Lieutenant",450],["Captain",500],["Commander",600]];
+var DAYS=["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
+var bareme=[],nextId=1;
+var L={hash:"",on:false,locks:{p:1,r:1,l:1,d:1}};
+var $=function(id){return document.getElementById(id)};
+var fmt=function(n){return (Math.round(n*100)/100).toLocaleString("fr-FR")+" $"};
+var fh=function(n){return (Math.round(n*100)/100).toLocaleString("fr-FR")+" h"};
+var num=function(el){var v=parseFloat(el.value);return isNaN(v)||v<0?0:v};
+var esc=function(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")};
+function hs(s){var a=5381,b=52711;s="sasp|"+s;for(var i=0;i<s.length;i++){var c=s.charCodeAt(i);a=((a<<5)+a+c)|0;b=((b<<5)^b^c*31)|0}return (a>>>0).toString(36)+(b>>>0).toString(36)}
+function defBareme(){bareme=DEF_GR.map(function(r){return {id:nextId++,n:r[0],t:r[1]}})}
+function gById(id){return bareme.filter(function(g){return String(g.id)===String(id)})[0]}
+function toast(m){$("toast").textContent=m;setTimeout(function(){$("toast").textContent=""},2500)}
+
+/* ---- grades ---- */
+function buildSettings(){
+  $("gradesBody").innerHTML=bareme.map(function(g){
+    return '<tr data-id="'+g.id+'"><td><input class="gn" value="'+esc(g.n)+'"></td><td><input class="gt" type="number" min="0" step="1" value="'+g.t+'"></td><td class="x"><button class="del gdel" title="Supprimer ce grade">×</button></td></tr>';
+  }).join("");
+}
+function fillSelect(sel,val){
+  sel.innerHTML='<option value="">—</option>'+bareme.map(function(g){return '<option value="'+g.id+'">'+esc(g.n)+'</option>'}).join("");
+  sel.value=val===undefined||val===null?"":String(val);
+  if(sel.value!==String(val||""))sel.value="";
+}
+function refreshSelects(){document.querySelectorAll("#rows .gr").forEach(function(s){fillSelect(s,s.value)})}
+
+/* ---- agents ---- */
+function addRow(o){
+  o=o||{};var d=o.d||[];
+  var dh="";for(var i=0;i<7;i++)dh+='<td><input class="d" type="number" min="0" step="0.25" aria-label="'+DAYS[i]+'"></td>';
+  var tr=document.createElement("tr");
+  tr.innerHTML='<td class="n"></td><td><input class="nom" placeholder="Nom Prénom"></td><td><input class="mat" placeholder="SASP-000"></td><td><select class="gr"></select></td><td><input class="t" type="number" min="0" step="1"></td>'+dh+'<td class="amt th">-</td><td class="amt s">-</td><td class="x"><button class="del rdel" title="Supprimer la ligne">×</button></td>';
+  tr.querySelector(".nom").value=o.nom||"";tr.querySelector(".mat").value=o.mat||"";
+  fillSelect(tr.querySelector(".gr"),o.g);
+  tr.querySelector(".t").value=o.t===undefined||o.t===""?"":o.t;
+  tr.querySelectorAll(".d").forEach(function(e,k){e.value=d[k]===undefined?"":d[k]});
+  $("rows").appendChild(tr);
+}
+function addRows(n){for(var i=0;i<n;i++)addRow()}
+function rowHours(tr){var h=0;tr.querySelectorAll(".d").forEach(function(e){h+=num(e)});return h}
+function calc(){
+  var tot=0,th=0,i=0;
+  document.querySelectorAll("#rows tr").forEach(function(tr){
+    i++;tr.querySelector(".n").textContent=i;
+    var h=rowHours(tr),s=h*num(tr.querySelector(".t"));
+    tr.querySelector(".th").textContent=h>0?fh(h):"-";
+    tr.querySelector(".s").textContent=s>0?fmt(s):"-";tot+=s;th+=h;
+  });
+  $("totalH").textContent=fh(th);$("total").textContent=fmt(tot);
+  applyLock();
+  return tot;
+}
+
+/* ---- verrouillage ---- */
+function setDis(sel,v){document.querySelectorAll(sel).forEach(function(e){e.disabled=!!v})}
+function applyLock(){
+  var on=!!(L.hash&&L.on),k=L.locks;
+  setDis("#gradesBody input,#gradesBody button,#addGrade,#resetGrades",on&&k.p);
+  setDis("#rows .gr,#rows .t",on&&k.r);
+  setDis("#add,#reset,#rows .rdel",on&&k.l);
+  setDis("#du,#au",on&&k.d);
+}
+function cbHtml(){
+  var it=[["p","Grades et taux (paramètres)"],["r","Grade et taux de chaque ligne"],["l","Ajouter, supprimer ou vider les lignes"],["d","Dates de la période"]];
+  return '<p class="note" style="margin-top:0">Fonctions à verrouiller :</p>'+it.map(function(x){
+    return '<label class="chk"><input type="checkbox" id="lk_'+x[0]+'"'+(L.locks[x[0]]?" checked":"")+'>'+x[1]+'</label>';}).join("");
+}
+function readCb(){var k={};["p","r","l","d"].forEach(function(x){k[x]=$("lk_"+x).checked?1:0});return k}
+function cfgText(){return JSON.stringify({hash:L.hash,locks:L.locks,bareme:bareme})}
+function renderLock(){
+  var b=$("lockBox"),st=$("lockStatus");
+  if(!L.hash){
+    st.textContent="Pas de code";st.className="badge";
+    b.innerHTML=cbHtml()+'<label for="pin1">Choisis un code admin (4 caractères minimum)</label><input id="pin1" type="password" autocomplete="off"><div class="btns"><button id="lkSet">Définir le code et verrouiller</button></div>';
+  }else if(L.on){
+    st.textContent="Verrouillé";st.className="badge on";
+    b.innerHTML='<label for="pin2">Code admin</label><input id="pin2" type="password" autocomplete="off"><div class="btns"><button id="lkOpen">Déverrouiller</button></div>';
+  }else{
+    st.textContent="Déverrouillé";st.className="badge off";
+    b.innerHTML=cbHtml()+'<div class="btns"><button id="lkLock">Verrouiller maintenant</button><button id="lkDel" class="sec">Supprimer le code</button></div><p class="note">Configuration à intégrer pour tous les agents (grades, taux, code et verrous) :</p><textarea id="cfg" readonly></textarea><div class="btns" style="margin-top:6px"><button id="lkCopy" class="sec">Copier la configuration</button></div>';
+    $("cfg").value=cfgText();
+  }
+  applyLock();
+}
+function saveLock(){try{localStorage.setItem(LKEY,JSON.stringify(L))}catch(e){}}
+function loadLock(){
+  var s=null;try{s=JSON.parse(localStorage.getItem(LKEY)||"null")}catch(e){}
+  if(PRESET&&PRESET.hash&&(!s||s.hash!==PRESET.hash)){L={hash:PRESET.hash,on:true,locks:PRESET.locks||L.locks}}
+  else if(s&&s.locks){L=s}
+}
+
+/* ---- sauvegarde ---- */
+function save(){
+  try{
+    var rows=[];
+    document.querySelectorAll("#rows tr").forEach(function(tr){
+      rows.push({nom:tr.querySelector(".nom").value,mat:tr.querySelector(".mat").value,g:tr.querySelector(".gr").value,t:tr.querySelector(".t").value,
+        d:Array.prototype.map.call(tr.querySelectorAll(".d"),function(e){return e.value})});
+    });
+    localStorage.setItem(KEY,JSON.stringify({bareme:bareme,nextId:nextId,du:$("du").value,au:$("au").value,rows:rows}));
+  }catch(e){}
+  if(!L.hash||L.on){}else if($("cfg"))$("cfg").value=cfgText();
+}
+function load(){
+  try{
+    var d=JSON.parse(localStorage.getItem(KEY)||"null");
+    if(!d||!d.bareme||!d.rows)return false;
+    bareme=d.bareme;nextId=d.nextId||bareme.length+1;
+    if(d.du)$("du").value=d.du;if(d.au)$("au").value=d.au;
+    buildSettings();
+    d.rows.forEach(function(r){if(!r.d&&r.h!==undefined)r.d=[r.h];addRow(r)});
+    if(!d.rows.length)addRows(10);
+    return true;
+  }catch(e){return false}
+}
+
+/* ---- Discord ---- */
+function dfr(v){return v?v.split("-").reverse().join("/"):"…"}
+function resume(){
+  var Lg=["**FICHES DE PAIE SASP** — du "+dfr($("du").value)+" au "+dfr($("au").value)];
+  document.querySelectorAll("#rows tr").forEach(function(tr){
+    var h=rowHours(tr),t=num(tr.querySelector(".t")),nom=tr.querySelector(".nom").value.trim();
+    if(!nom&&h===0)return;
+    var m=tr.querySelector(".mat").value.trim(),g=gById(tr.querySelector(".gr").value);
+    var dd=[];tr.querySelectorAll(".d").forEach(function(e,k){var v=num(e);if(v>0)dd.push(DAYS[k]+" "+v)});
+    Lg.push("• "+(nom||"?")+(m?" ("+m+")":"")+(g?" — "+g.n:"")+" : "+h+" h × "+fmt(t)+" = "+fmt(h*t)+(dd.length?"\n   "+dd.join(" · "):""));
+  });
+  Lg.push("**TOTAL : "+fmt(calc())+"**");
+  return Lg.join("\n");
+}
+function copyText(t,ok){
+  function fb(){var a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();try{document.execCommand("copy");toast(ok)}catch(e){toast("Copie impossible")}document.body.removeChild(a)}
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){toast(ok)},fb)}else fb();
+}
+
+/* ---- événements ---- */
+document.addEventListener("input",function(e){
+  var el=e.target,tr=el.closest("#gradesBody tr");
+  if(tr){
+    var g=gById(tr.dataset.id);
+    if(g){
+      if(el.classList.contains("gn")){g.n=el.value;refreshSelects()}
+      if(el.classList.contains("gt")){
+        g.t=parseFloat(el.value)||0;
+        document.querySelectorAll("#rows tr").forEach(function(r){if(r.querySelector(".gr").value===String(g.id))r.querySelector(".t").value=g.t});
+      }
+    }
+  }
+  if(el.id==="pin1"||el.id==="pin2")return;
+  calc();save();
+});
+document.addEventListener("change",function(e){
+  if(e.target.classList.contains("gr")){
+    var g=gById(e.target.value);
+    if(g)e.target.closest("tr").querySelector(".t").value=g.t;
+    calc();save();
+  }
+});
+document.addEventListener("click",function(e){
+  var c=e.target.classList,id=e.target.id;
+  if(c.contains("rdel")){e.target.closest("tr").remove();if(!$("rows").children.length)addRows(1);calc();save()}
+  if(c.contains("gdel")){
+    var gid=e.target.closest("tr").dataset.id;
+    bareme=bareme.filter(function(g){return String(g.id)!==gid});
+    buildSettings();refreshSelects();calc();save();
+  }
+  if(id==="lkSet"){
+    var p=$("pin1").value;
+    if(p.length<4){toast("Code trop court (4 caractères minimum)");return}
+    L.locks=readCb();L.hash=hs(p);L.on=true;saveLock();renderLock();toast("Verrouillé");
+  }
+  if(id==="lkOpen"){
+    if(hs($("pin2").value)===L.hash){L.on=false;saveLock();renderLock();toast("Déverrouillé")}else toast("Code incorrect");
+  }
+  if(id==="lkLock"){L.locks=readCb();L.on=true;saveLock();renderLock();toast("Verrouillé")}
+  if(id==="lkDel"){L.hash="";L.on=false;saveLock();renderLock();toast("Code supprimé")}
+  if(id==="lkCopy"){copyText(cfgText(),"Configuration copiée")}
+});
+$("addGrade").onclick=function(){bareme.push({id:nextId++,n:"Nouveau grade",t:0});buildSettings();refreshSelects();calc();save()};
+$("resetGrades").onclick=function(){defBareme();buildSettings();refreshSelects();calc();save();toast("Grades par défaut rétablis")};
+$("add").onclick=function(){addRows(5);calc();save()};
+$("print").onclick=function(){window.print()};
+$("reset").onclick=function(){$("rows").innerHTML="";addRows(10);calc();save();toast("Agents vidés")};
+$("copy").onclick=function(){copyText(resume(),"Copié !")};
+
+/* ---- démarrage ---- */
+loadLock();
+if(!load()){
+  if(PRESET&&PRESET.bareme&&PRESET.bareme.length){
+    bareme=PRESET.bareme;nextId=bareme.reduce(function(m,g){return Math.max(m,g.id)},0)+1;
+  }else defBareme();
+  buildSettings();
+  var ex=bareme.filter(function(g){return g.n==="Officer II"})[0]||bareme[0];
+  addRow({nom:"Jack Miller",mat:"SASP-042",g:ex?ex.id:"",t:ex?ex.t:"",d:[2,3,0,2,3,2,0]});addRows(9);
+}
+renderLock();calc();
+</script>
+</body>
+</html>
